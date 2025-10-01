@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
 
-**A powerful, type-safe state machine library for Java that makes workflow management elegant and intuitive.**
+**A "flow machine" library for Java that makes workflow management elegant and intuitive.**
 
 ## 📦 Installation
 
@@ -27,7 +27,7 @@ Add the dependency:
 ```xml
 <dependency>
     <groupId>com.github.rayenrejeb</groupId>
-    <artifactId>flow-machine</artifactId>
+    <artifactId>flow-machine-core</artifactId>
     <version>Tag</version> <!-- Replace with latest version -->
 </dependency>
 ```
@@ -46,7 +46,7 @@ Add the dependency:
 
 ```gradle
 dependencies {
-    implementation 'com.github.rayenrejeb:flow-machine:Tag' // Replace with latest version
+    implementation 'com.github.rayenrejeb:flow-machine-core:Tag' // Replace with latest version
 }
 ```
 
