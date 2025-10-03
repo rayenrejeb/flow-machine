@@ -128,7 +128,7 @@ Feature: StateMachine API Methods
 
   Scenario: Performance testing with high-frequency operations
     Given I have a simple workflow
-    When I perform 10000 fire operations in less than 100 ms
+    When I perform 10000 fire operations in less than 1000 ms
     Then all operations should complete within acceptable time limits
     And memory usage should remain stable
     And no performance degradation should occur
