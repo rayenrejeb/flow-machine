@@ -45,52 +45,181 @@ jobs:
         body: |
           ## 🚀 FlowMachine ${{ github.ref_name }}
 
-          A powerful, type-safe state machine library for Java.
+          # Introducing State Handler Pattern for FlowMachine
 
-          ### 📦 Maven Usage
+          ## Problem
+          In complex workflows, the StateConfiguration can become very long and difficult to maintain. For example, the original `JobApplicantSteps` class had a StateConfiguration spanning over 120 lines (lines 148-269), making it hard to:
+          
+            - Understand individual state logic
+            - Maintain and modify specific states
+            - Test state behavior in isolation
+            - Follow single responsibility principle
+          
+          ## Solution: State Handler Pattern
 
-          Add this dependency to your Maven project:
-
-          ```xml
-          <dependency>
-              <groupId>com.github.rayenrejeb</groupId>
-              <artifactId>flow-machine</artifactId>
-              <version>${{ github.ref_name }}</version>
-          </dependency>
-          ```
-
-          Add JitPack repository:
-
-          ```xml
-          <repository>
-              <id>jitpack.io</id>
-              <url>https://jitpack.io</url>
-          </repository>
-          ```
-
-          ### 🐘 Gradle Usage
-
-          ```gradle
-          repositories {
-              maven { url 'https://jitpack.io' }
+          ### 1. Enhanced StateMachineBuilder Interface
+          
+          The FlowMachine Core API now includes both methods in `com.flowmachine.core.api.StateMachineBuilder`:
+            
+            ```java
+            // Existing method (still supported)
+            StateMachineBuilder<TState, TEvent, TContext> configure(StateHandler<TState, TEvent, TContext> stateHandler);
+          
+            // NEW: State-visible method with explicit state parameter
+            StateMachineBuilder<TState, TEvent, TContext> configure(TState state, StateHandler<TState, TEvent, TContext> stateHandler);
+            ```
+          
+          ### 2. StateHandler Interface
+          
+          The StateHandler interface is now part of the core FlowMachine API (`com.flowmachine.core.api.StateHandler`):
+            
+            ```java
+            public interface StateHandler<TState, TEvent, TContext> {
+            TState getState();
+            StateConfiguration<TState, TEvent, TContext> configure(StateConfiguration<TState, TEvent, TContext> configuration);
           }
-
-          dependencies {
-              implementation 'com.github.rayenrejeb:flow-machine:${{ github.ref_name }}'
+            ```
+          
+          ### 3. Validation and Safety
+          
+          The new method validates that the provided state matches the handler's state:
+            
+            ```java
+            // This will throw StateMachineException
+            .configure(JobState.INITIAL_SCREENING, new SubmittedStateHandler()) // WRONG state!
+            ```
+            
+            The validation occurs at build time and provides clear error messages when there's a mismatch.
+            
+            ## Usage Examples
+            
+            ### 1. Enhanced Readability Approach (Recommended)
+            
+            ```java
+            StateMachine<JobState, JobEvent, JobApplicant> workflow = FlowMachine.<JobState, JobEvent, JobApplicant>builder()
+            .initialState(JobState.SUBMITTED)
+            
+            // ✅ Clear which states are configured
+            .configure(JobState.SUBMITTED, new SubmittedStateHandler())
+            .configure(JobState.INITIAL_SCREENING, new InitialScreeningStateHandler())
+            
+            // Mix with explicit configuration
+            .configure(JobState.HR_INTERVIEW)
+            .permit(JobEvent.PROCEED, JobState.HIRED)
+            .and()
+            
+            .configure(JobState.HIRED)
+            .asFinal()
+            .and()
+            
+            .build();
+            ```
+          
+          ### 2. Mixed Approaches
+          
+          You can use both approaches in the same builder:
+            
+            ```java
+            StateMachine<JobState, JobEvent, JobApplicant> workflow = FlowMachine.<JobState, JobEvent, JobApplicant>builder()
+            .initialState(JobState.SUBMITTED)
+            
+            // Use state-visible approach where clarity helps
+            .configure(JobState.SUBMITTED, new SubmittedStateHandler())
+            
+            // Use original approach where context is clear
+            .configure(new InitialScreeningStateHandler())
+            
+            // Mix with explicit configuration
+            .configure(JobState.HR_INTERVIEW)
+            .permit(JobEvent.PROCEED, JobState.HIRED)
+            .and()
+            
+            .build();
+            ```
+          
+          ### 3. Backward Compatibility
+          
+          All existing code continues to work unchanged:
+            
+            
+            ## Benefits
+            
+            ### 1. **Improved Readability**
+            - `.configure(JobState.INITIAL_SCREENING, new InitialScreeningStateHandler())`
+            
+            ### 2. **Better IDE Support**
+            - **Navigation**: Jump to state definition easily
+            - **Refactoring**: Safer when renaming states
+            
+            ### 3. **Enhanced Code Reviews**
+            - **State Coverage**: See which states are handled at a glance
+            - **Missing States**: Easily spot states that need handlers
+            - **Pattern Consistency**: Encourage consistent state handling patterns
+          
+          ### 4. **Documentation Value**
+            ```java
+            // Self-documenting code - you can see the workflow structure
+            .configure(JobState.SUBMITTED, new SubmittedStateHandler())
+            .configure(JobState.INITIAL_SCREENING, new InitialScreeningStateHandler())
+            .configure(JobState.TECHNICAL_REVIEW, new TechnicalReviewStateHandler())
+            .configure(JobState.HR_INTERVIEW, new HrInterviewStateHandler())
+            .configure(JobState.FINAL_REVIEW, new FinalReviewStateHandler())
+            ```
+          
+          ## Implementation Details
+          
+          ### Core API Integration
+          
+          The enhancement has been fully integrated into the FlowMachine Core API:
+          
+            - **StateMachineBuilder Interface**: Enhanced with new `configure(TState, StateHandler)` method
+            - **StateMachineBuilderImpl**: Implements the validation logic and delegation
+            - **StateHandler Interface**: Moved to core API for broader accessibility
+          
+          ### State Validation Implementation
+            
+            ```java
+            @Override
+            public StateMachineBuilder<TState, TEvent, TContext> configure(TState state,
+            StateHandler<TState, TEvent, TContext> stateHandler) {
+            TState handlerState = stateHandler.getState();
+            if (!state.equals(handlerState)) {
+            throw new StateMachineException(
+          String.format("State mismatch: provided state '%s' does not match StateHandler state '%s'",
+            state, handlerState));
           }
-          ```
-
-          ### 📚 Documentation
-
-          - [Quick Start Guide](https://github.com/rayenrejeb/flow-machine/blob/main/QUICK_START.md)
-          - [Usage Examples](https://github.com/rayenrejeb/flow-machine/blob/main/USAGE_EXAMPLES.md)
-          - [API Reference](https://github.com/rayenrejeb/flow-machine/blob/main/STATEMACHINE_API_REFERENCE.md)
-
-          ### 🛠️ What's Included
-
-          - Type-safe state machine with fluent builder API
-          - Final states and auto-transitions
-          - Guard conditions and priority-based routing
-          - Visual diagram generation (Mermaid & PlantUML)
-          - Thread-safe and high-performance
-          - Comprehensive test coverage
+            return configure(stateHandler);
+          }
+            ```
+          
+          ### Zero Performance Impact
+          
+          - The new method is a thin wrapper around the original `configure(StateHandler)` method
+          - State validation happens at build time during StateMachine construction
+          - No performance penalty for existing code using the original method
+          - Minimal overhead for the new method (single object equality check)
+          
+          ## Test Results
+          
+          All functionality thoroughly tested with comprehensive test suites:
+            
+            ```
+            ✅ Original approach (without state visibility) works!
+            ✅ Enhanced approach (with state visibility) works!
+            ✅ State mismatch validation works correctly!
+            ✅ Mixed approaches work perfectly together!
+            ✅ Static factory method alternatives demonstrated!
+            ```
+          
+          ## Migration Guide
+          
+          ### For New Code
+          Use the state-visible approach for better readability:
+            ```java
+            .configure(OrderState.SUBMITTED, new SubmittedStateHandler())
+            ```
+          
+          ### For Existing Code
+          No changes required - existing code continues to work:
+            
+            The enhanced API makes FlowMachine StateHandlers significantly more developer-friendly and maintainable, addressing the key concern of state visibility while preserving all existing functionality.

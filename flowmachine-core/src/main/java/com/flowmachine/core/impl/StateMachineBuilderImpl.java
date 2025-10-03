@@ -2,6 +2,7 @@ package com.flowmachine.core.impl;
 
 import com.flowmachine.core.api.Action;
 import com.flowmachine.core.api.StateConfiguration;
+import com.flowmachine.core.api.StateHandler;
 import com.flowmachine.core.api.StateMachine;
 import com.flowmachine.core.api.StateMachineBuilder;
 import com.flowmachine.core.api.StateMachineListener;
@@ -31,9 +32,29 @@ public class StateMachineBuilderImpl<TState, TEvent, TContext> implements
 
   @Override
   public StateConfiguration<TState, TEvent, TContext> configure(TState state) {
-    StateDefinition<TState, TEvent, TContext> stateDefinition = stateDefinitions.computeIfAbsent(
-        state, StateDefinition::new);
+    StateDefinition<TState, TEvent, TContext> stateDefinition = stateDefinitions
+        .computeIfAbsent(state, StateDefinition::new);
     return new StateConfigurationImpl<>(this, stateDefinition);
+  }
+
+  @Override
+  public StateMachineBuilder<TState, TEvent, TContext> configure(StateHandler<TState, TEvent, TContext> stateHandler) {
+    StateConfiguration<TState, TEvent, TContext> config = configure(stateHandler.getState());
+    config = stateHandler.configure(config);
+    config.and();
+    return this;
+  }
+
+  @Override
+  public StateMachineBuilder<TState, TEvent, TContext> configure(TState state,
+      StateHandler<TState, TEvent, TContext> stateHandler) {
+    TState handlerState = stateHandler.getState();
+    if (!state.equals(handlerState)) {
+      throw new StateMachineException(
+          String.format("State mismatch: provided state '%s' does not match StateHandler state '%s'",
+              state, handlerState));
+    }
+    return configure(stateHandler);
   }
 
   @Override
