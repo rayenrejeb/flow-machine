@@ -3,10 +3,8 @@ package com.flowmachine.core.impl;
 import com.flowmachine.core.api.Action;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 class StateDefinition<TState, TEvent, TContext> {
 
@@ -16,8 +14,6 @@ class StateDefinition<TState, TEvent, TContext> {
   private final List<Action<TState, TEvent, TContext>> exitActions = new ArrayList<>();
   private boolean isFinal = false;
 
-  private volatile Map<TEvent, List<TransitionRule<TState, TEvent, TContext>>> transitionCache;
-  private volatile boolean cacheBuilt = false;
 
   StateDefinition(TState state) {
     this.state = state;
@@ -28,15 +24,15 @@ class StateDefinition<TState, TEvent, TContext> {
   }
 
   List<TransitionRule<TState, TEvent, TContext>> getTransitions() {
-    return new ArrayList<>(transitions);
+    return Collections.unmodifiableList(transitions);
   }
 
   List<Action<TState, TEvent, TContext>> getEntryActions() {
-    return new ArrayList<>(entryActions);
+    return Collections.unmodifiableList(entryActions);
   }
 
   List<Action<TState, TEvent, TContext>> getExitActions() {
-    return new ArrayList<>(exitActions);
+    return Collections.unmodifiableList(exitActions);
   }
 
   boolean isFinal() {
@@ -48,9 +44,7 @@ class StateDefinition<TState, TEvent, TContext> {
   }
 
   List<TransitionRule<TState, TEvent, TContext>> getAutoTransitions() {
-    return transitions.stream()
-        .filter(TransitionRule::isAutoTransition)
-        .collect(Collectors.toList());
+    return transitions.stream().filter(TransitionRule::isAutoTransition).toList();
   }
 
 
@@ -64,35 +58,9 @@ class StateDefinition<TState, TEvent, TContext> {
 
   void addTransition(TransitionRule<TState, TEvent, TContext> transition) {
     transitions.add(transition);
-    cacheBuilt = false;
   }
 
   List<TransitionRule<TState, TEvent, TContext>> getTransitionsForEvent(TEvent event) {
-    buildCacheIfNeeded();
-    return transitionCache.getOrDefault(event, Collections.emptyList());
-  }
-
-  private void buildCacheIfNeeded() {
-    if (!cacheBuilt) {
-      synchronized (this) {
-        if (!cacheBuilt) {
-          buildTransitionCache();
-          cacheBuilt = true;
-        }
-      }
-    }
-  }
-
-  private void buildTransitionCache() {
-    Map<TEvent, List<TransitionRule<TState, TEvent, TContext>>> cache = new HashMap<>();
-    for (TransitionRule<TState, TEvent, TContext> rule : transitions) {
-      cache.computeIfAbsent(rule.event(), k -> new ArrayList<>()).add(rule);
-    }
-
-    for (Map.Entry<TEvent, List<TransitionRule<TState, TEvent, TContext>>> entry : cache.entrySet()) {
-      entry.setValue(Collections.unmodifiableList(entry.getValue()));
-    }
-
-    this.transitionCache = Collections.unmodifiableMap(cache);
+    return transitions.stream().filter(rule -> Objects.equals(rule.event(), event)).toList();
   }
 }

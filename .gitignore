@@ -48,3 +48,8 @@ Thumbs.db
 ## Temporary files ##
 *.tmp
 *.temp
+STATIC_FACTORY_APPROACHES.md
+STATE_VISIBILITY_ENHANCEMENT.md
+flowmachine-spring/
+CHANGELOG.md
+PUBLISH_INSTRUCTIONS.md

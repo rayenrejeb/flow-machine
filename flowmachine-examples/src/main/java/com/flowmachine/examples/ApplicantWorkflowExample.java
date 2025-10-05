@@ -3,6 +3,7 @@ package com.flowmachine.examples;
 import com.flowmachine.core.FlowMachine;
 import com.flowmachine.core.api.StateMachine;
 import com.flowmachine.core.diagram.MermaidDiagramGenerator;
+import com.flowmachine.core.diagram.DiagramGenerator;
 import com.flowmachine.core.model.StateMachineInfo;
 import com.flowmachine.core.model.TransitionInfo;
 import java.time.LocalDateTime;
@@ -197,7 +198,8 @@ public class ApplicantWorkflowExample {
             System.out.println("Errors: " + validation.errors());
         }
 
-        var diagram = MermaidDiagramGenerator.generateDetailed(stateMachine, "Applicant workflow");
+        DiagramGenerator<ApplicantState, ApplicantEvent, Applicant> generator = new MermaidDiagramGenerator<>();
+        var diagram = generator.generateDetailed(stateMachine, "Applicant workflow");
         System.out.println(diagram);
         System.out.println("----------1111------");
         System.out.println(generatePlantUMLDiagram(stateMachine));

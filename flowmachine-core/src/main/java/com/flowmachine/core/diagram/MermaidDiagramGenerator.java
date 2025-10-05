@@ -3,68 +3,52 @@ package com.flowmachine.core.diagram;
 import com.flowmachine.core.api.StateMachine;
 import com.flowmachine.core.model.StateMachineInfo;
 import com.flowmachine.core.model.TransitionInfo;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Utility class for generating Mermaid diagrams from StateMachine instances.
- * <p>
- * Mermaid is a popular diagramming tool that renders diagrams from text definitions. The generated diagrams can be
- * viewed in GitHub, GitLab, documentation tools, or online at https://mermaid.live/
+ * Mermaid diagram generator implementation for StateMachine instances.
  *
+ * @param <TState>   the type of states in the state machine
+ * @param <TEvent>   the type of events in the state machine
+ * @param <TContext> the type of context in the state machine
  * @author FlowMachine
  */
-public class MermaidDiagramGenerator {
+public class MermaidDiagramGenerator<TState, TEvent, TContext> implements DiagramGenerator<TState, TEvent, TContext> {
 
-  /**
-   * Creates a new instance-based Mermaid diagram generator.
-   *
-   * @param <TState>   the type of states in the state machine
-   * @param <TEvent>   the type of events in the state machine
-   * @param <TContext> the type of context in the state machine
-   * @return a new MermaidDiagramGenerator instance
-   */
-  public static <TState, TEvent, TContext> DiagramGenerator<TState, TEvent, TContext> create() {
-    return new MermaidDiagramGeneratorImpl<>();
+  private static final Logger logger = LoggerFactory.getLogger(MermaidDiagramGenerator.class.getName());
+
+  @Override
+  public String generate(StateMachine<TState, TEvent, TContext> stateMachine) {
+    return generate(stateMachine, null);
   }
 
-  /**
-   * Instance-based implementation of the DiagramGenerator interface for Mermaid diagrams.
-   */
-  private static class MermaidDiagramGeneratorImpl<TState, TEvent, TContext>
-      implements DiagramGenerator<TState, TEvent, TContext> {
+  @Override
+  public String generate(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
+    return generateMermaidDiagram(stateMachine, title);
+  }
 
-    @Override
-    public String generate(StateMachine<TState, TEvent, TContext> stateMachine) {
-      return MermaidDiagramGenerator.generate(stateMachine);
-    }
+  @Override
+  public String generateDetailed(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
+    return generateDetailedMermaidDiagram(stateMachine, title);
+  }
 
-    @Override
-    public String generate(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
-      return MermaidDiagramGenerator.generate(stateMachine, title);
-    }
+  @Override
+  public String generateForEvent(StateMachine<TState, TEvent, TContext> stateMachine, TEvent focusEvent, String title) {
+    return generateMermaidDiagramForEvent(stateMachine, focusEvent, title);
+  }
 
-    @Override
-    public String generateDetailed(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
-      return MermaidDiagramGenerator.generateDetailed(stateMachine, title);
-    }
+  @Override
+  public void printToConsole(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
+    printMermaidToConsole(stateMachine, title);
+  }
 
-    @Override
-    public String generateForEvent(StateMachine<TState, TEvent, TContext> stateMachine, TEvent focusEvent,
-        String title) {
-      return MermaidDiagramGenerator.generateForEvent(stateMachine, focusEvent, title);
-    }
-
-    @Override
-    public void printToConsole(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
-      MermaidDiagramGenerator.printToConsole(stateMachine, title);
-    }
-
-    @Override
-    public DiagramFormat getFormatName() {
-      return DiagramFormat.MERMAID;
-    }
-
+  @Override
+  public DiagramFormat getFormatName() {
+    return DiagramFormat.MERMAID;
   }
 
   /**
@@ -74,14 +58,12 @@ public class MermaidDiagramGenerator {
    * @param title        optional title for the diagram (can be null)
    * @return Mermaid diagram as a string
    */
-  public static <TState, TEvent, TContext> String generate(
-      StateMachine<TState, TEvent, TContext> stateMachine,
-      String title) {
+  private String generateMermaidDiagram(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
 
     StringBuilder mermaid = new StringBuilder();
 
     // Add title if provided
-    if (title != null && !title.trim().isEmpty()) {
+    if (Objects.nonNull(title) && !title.trim().isEmpty()) {
       mermaid.append("---\n");
       mermaid.append("title: ").append(title).append("\n");
       mermaid.append("---\n");
@@ -129,7 +111,7 @@ public class MermaidDiagramGenerator {
       mermaid.append("    classDef finalState fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px\n");
       mermaid.append("    class ");
       mermaid.append(finalStates.stream()
-          .map(MermaidDiagramGenerator::sanitizeStateName)
+          .map(this::sanitizeStateName)
           .collect(Collectors.joining(",")));
       mermaid.append(" finalState\n");
     }
@@ -137,16 +119,6 @@ public class MermaidDiagramGenerator {
     return mermaid.toString();
   }
 
-  /**
-   * Generates a Mermaid state diagram without a title.
-   *
-   * @param stateMachine the state machine to visualize
-   * @return Mermaid diagram as a string
-   */
-  public static <TState, TEvent, TContext> String generate(
-      StateMachine<TState, TEvent, TContext> stateMachine) {
-    return generate(stateMachine, null);
-  }
 
   /**
    * Generates a comprehensive Mermaid diagram with additional information including state counts, transition counts,
@@ -156,15 +128,13 @@ public class MermaidDiagramGenerator {
    * @param title        optional title for the diagram
    * @return enhanced Mermaid diagram as a string
    */
-  public static <TState, TEvent, TContext> String generateDetailed(
-      StateMachine<TState, TEvent, TContext> stateMachine,
-      String title) {
+  private String generateDetailedMermaidDiagram(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
 
     StringBuilder mermaid = new StringBuilder();
     StateMachineInfo<TState, TEvent, TContext> info = stateMachine.getInfo();
 
     // Add title with statistics
-    String enhancedTitle = title != null ? title : "State Machine Diagram";
+    String enhancedTitle = Objects.nonNull(title) ? title : "State Machine Diagram";
     enhancedTitle += String.format(" (%d states, %d transitions)",
         info.states().size(),
         info.transitions().size());
@@ -174,7 +144,7 @@ public class MermaidDiagramGenerator {
     mermaid.append("---\n");
 
     // Generate the main diagram
-    mermaid.append(generate(stateMachine, null));
+    mermaid.append(generateMermaidDiagram(stateMachine, null));
 
     // Add notes as comments
     mermaid.append("\n    %% State Machine Information:\n");
@@ -200,15 +170,13 @@ public class MermaidDiagramGenerator {
    * @param title        optional title for the diagram
    * @return filtered Mermaid diagram as a string
    */
-  public static <TState, TEvent, TContext> String generateForEvent(
-      StateMachine<TState, TEvent, TContext> stateMachine,
-      TEvent focusEvent,
+  private String generateMermaidDiagramForEvent(StateMachine<TState, TEvent, TContext> stateMachine, TEvent focusEvent,
       String title) {
 
     StringBuilder mermaid = new StringBuilder();
 
     // Add title
-    String enhancedTitle = (title != null ? title : "State Machine") +
+    String enhancedTitle = (Objects.nonNull(title) ? title : "State Machine") +
                            " - Event: " + focusEvent;
     mermaid.append("---\n");
     mermaid.append("title: ").append(enhancedTitle).append("\n");
@@ -224,7 +192,7 @@ public class MermaidDiagramGenerator {
     // Add only transitions for the focused event
     var filteredTransitions = info.transitions().stream()
         .filter(t -> focusEvent.equals(t.event()))
-        .collect(Collectors.toList());
+        .toList();
 
     for (TransitionInfo<TState, TEvent> transition : filteredTransitions) {
       String fromState = sanitizeStateName(transition.fromState());
@@ -259,30 +227,30 @@ public class MermaidDiagramGenerator {
    * @param stateMachine the state machine to visualize
    * @param title        optional title for the diagram
    */
-  public static <TState, TEvent, TContext> void printToConsole(
-      StateMachine<TState, TEvent, TContext> stateMachine,
-      String title) {
+  private void printMermaidToConsole(StateMachine<TState, TEvent, TContext> stateMachine, String title) {
+    String diagram = """
+        ╔════════════════════════════════════════════════════════════════╗
+        ║                      MERMAID FLOW DIAGRAM                      ║
+        ╠════════════════════════════════════════════════════════════════╣
+        ║ Copy the text below and paste it into:                         ║
+        ║ • GitHub/GitLab markdown (in ```mermaid blocks)                ║
+        ║ • https://mermaid.live/ for online viewing                     ║
+        ║ • VS Code with Mermaid extension                               ║
+        ╚════════════════════════════════════════════════════════════════╝
 
-    System.out.println("╔════════════════════════════════════════════════════════════════╗");
-    System.out.println("║                     MERMAID STATE DIAGRAM                     ║");
-    System.out.println("╠════════════════════════════════════════════════════════════════╣");
-    System.out.println("║ Copy the text below and paste it into:                        ║");
-    System.out.println("║ • GitHub/GitLab markdown (in ```mermaid blocks)               ║");
-    System.out.println("║ • https://mermaid.live/ for online viewing                    ║");
-    System.out.println("║ • VS Code with Mermaid extension                              ║");
-    System.out.println("╚════════════════════════════════════════════════════════════════╝");
-    System.out.println();
-    System.out.println("```mermaid");
-    System.out.println(generate(stateMachine, title));
-    System.out.println("```");
-    System.out.println();
+        ```mermaid
+        %s
+        ```
+        """.formatted(generateMermaidDiagram(stateMachine, title));
+
+    logger.info(diagram);
   }
 
   /**
    * Sanitizes state names to be valid in Mermaid diagrams. Handles special characters and ensures valid identifiers.
    */
-  private static <TState> String sanitizeStateName(TState state) {
-    if (state == null) {
+  private String sanitizeStateName(TState state) {
+    if (Objects.isNull(state)) {
       return "NULL";
     }
 
@@ -307,8 +275,8 @@ public class MermaidDiagramGenerator {
   /**
    * Sanitizes event names to be valid in Mermaid diagrams.
    */
-  private static <TEvent> String sanitizeEventName(TEvent event) {
-    if (event == null) {
+  private String sanitizeEventName(TEvent event) {
+    if (Objects.isNull(event)) {
       return "NULL";
     }
 

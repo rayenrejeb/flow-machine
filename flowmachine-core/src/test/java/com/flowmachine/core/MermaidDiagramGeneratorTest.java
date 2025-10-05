@@ -2,6 +2,7 @@ package com.flowmachine.core;
 
 import com.flowmachine.core.api.StateMachine;
 import com.flowmachine.core.diagram.MermaidDiagramGenerator;
+import com.flowmachine.core.diagram.DiagramGenerator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +27,8 @@ class MermaidDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = MermaidDiagramGenerator.generate(machine, "Simple Test Machine");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new MermaidDiagramGenerator<>();
+        String diagram = generator.generate(machine, "Simple Test Machine");
 
         // Verify basic structure
         assertTrue(diagram.contains("stateDiagram-v2"));
@@ -55,7 +57,8 @@ class MermaidDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = MermaidDiagramGenerator.generate(machine);
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new MermaidDiagramGenerator<>();
+        String diagram = generator.generate(machine);
 
         // Should not contain title section
         assertFalse(diagram.contains("title:"));
@@ -77,7 +80,8 @@ class MermaidDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = MermaidDiagramGenerator.generateDetailed(machine, "Test Machine");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new MermaidDiagramGenerator<>();
+        String diagram = generator.generateDetailed(machine, "Test Machine");
 
         // Should contain enhanced title with statistics
         assertTrue(diagram.contains("Test Machine (2 states, 1 transitions)"));
@@ -106,7 +110,8 @@ class MermaidDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = MermaidDiagramGenerator.generateForEvent(machine, SimpleEvent.GO, "GO Event Only");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new MermaidDiagramGenerator<>();
+        String diagram = generator.generateForEvent(machine, SimpleEvent.GO, "GO Event Only");
 
         // Should contain only GO transitions
         assertTrue(diagram.contains("START --> MIDDLE : GO"));
@@ -142,7 +147,8 @@ class MermaidDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = MermaidDiagramGenerator.generate(machine);
+        DiagramGenerator<SpecialState, SpecialEvent, String> generator = new MermaidDiagramGenerator<>();
+        String diagram = generator.generate(machine);
 
         // Should handle underscores in state names
         assertTrue(diagram.contains("START_STATE"));
@@ -167,7 +173,8 @@ class MermaidDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = MermaidDiagramGenerator.generate(machine, "Conditional Transitions");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new MermaidDiagramGenerator<>();
+        String diagram = generator.generate(machine, "Conditional Transitions");
 
         // Should show both conditional transitions
         assertTrue(diagram.contains("START --> MIDDLE : GO"));

@@ -1,5 +1,7 @@
 package com.flowmachine.core.model;
 
+import java.util.Objects;
+
 public record TransitionResult<TState>(
     TState state,
     boolean wasTransitioned,
@@ -25,6 +27,6 @@ public record TransitionResult<TState>(
   }
 
   public boolean hasDebugInfo() {
-    return debugInfo != null;
+    return Objects.nonNull(debugInfo);
   }
 }

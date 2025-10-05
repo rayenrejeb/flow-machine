@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class StateMachineBuilderImpl<TState, TEvent, TContext> implements
     StateMachineBuilder<TState, TEvent, TContext> {
@@ -90,7 +91,7 @@ public class StateMachineBuilderImpl<TState, TEvent, TContext> implements
 
   @Override
   public StateMachine<TState, TEvent, TContext> build() {
-    if (initialState == null) {
+    if (Objects.isNull(initialState)) {
       throw new StateMachineException("Initial state must be specified");
     }
 

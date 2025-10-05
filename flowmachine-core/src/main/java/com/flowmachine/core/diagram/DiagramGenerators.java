@@ -19,7 +19,7 @@ public class DiagramGenerators {
    * @return a Mermaid diagram generator
    */
   public static <TState, TEvent, TContext> DiagramGenerator<TState, TEvent, TContext> mermaid() {
-    return MermaidDiagramGenerator.create();
+    return new MermaidDiagramGenerator<>();
   }
 
   /**
@@ -31,7 +31,7 @@ public class DiagramGenerators {
    * @return a PlantUML diagram generator
    */
   public static <TState, TEvent, TContext> DiagramGenerator<TState, TEvent, TContext> plantUML() {
-    return PlantUMLDiagramGenerator.create();
+    return new PlantUMLDiagramGenerator<>();
   }
 
 }

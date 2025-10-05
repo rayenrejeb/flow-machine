@@ -7,7 +7,7 @@
 
     <groupId>com.flowmachine</groupId>
     <artifactId>flowmachine-parent</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
 
     <repositories>
@@ -45,8 +45,12 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>5.10.0</junit.version>
-        <mockito.version>5.5.0</mockito.version>
+        <junit.version>5.11.0</junit.version>
+        <mockito.version>5.20.0</mockito.version>
+        <cucumber.version>7.14.0</cucumber.version>
+        <junit.platform.version>1.10.0</junit.platform.version>
+        <assertj.version>3.27.3</assertj.version>
+        <log4j.version>2.25.2</log4j.version>
         <maven.surefire.version>3.1.2</maven.surefire.version>
         <maven.failsafe.version>3.1.2</maven.failsafe.version>
         <jacoco.version>0.8.10</jacoco.version>
@@ -55,6 +59,7 @@
     <modules>
         <module>flowmachine-core</module>
         <module>flowmachine-examples</module>
+        <module>flowmachine-test</module>
     </modules>
 
     <dependencyManagement>
@@ -70,6 +75,36 @@
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-java</artifactId>
+                <version>${cucumber.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-junit-platform-engine</artifactId>
+                <version>${cucumber.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-suite</artifactId>
+                <version>${junit.platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j.version}</version>
+                <scope>compile</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

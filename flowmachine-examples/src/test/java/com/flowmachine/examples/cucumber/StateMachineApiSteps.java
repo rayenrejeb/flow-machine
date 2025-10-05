@@ -69,7 +69,6 @@ public class StateMachineApiSteps {
             .configure(TaskState.PROCESSING)
                 .permit(TaskEvent.FINISH, TaskState.COMPLETED)
                 .permit(TaskEvent.FAIL, TaskState.FAILED)
-                .onEntry((t, task) -> System.out.println("Task " + task.getId() + " processing"))
             .and()
 
             .configure(TaskState.COMPLETED)

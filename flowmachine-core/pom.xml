@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.flowmachine</groupId>
         <artifactId>flowmachine-parent</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </parent>
 
     <artifactId>flowmachine-core</artifactId>
@@ -18,6 +18,11 @@
     <description>Core state machine engine</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

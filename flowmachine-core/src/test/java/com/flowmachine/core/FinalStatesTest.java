@@ -1,110 +1,112 @@
 package com.flowmachine.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.flowmachine.core.api.StateMachine;
-import com.flowmachine.core.model.ValidationResult;
 import com.flowmachine.core.model.TransitionResult;
+import com.flowmachine.core.model.ValidationResult;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class FinalStatesTest {
 
-    enum State { START, PROCESSING, COMPLETED, FAILED }
-    enum Event { PROCESS, COMPLETE, FAIL, RETRY }
+  enum State {START, PROCESSING, COMPLETED, FAILED}
 
-    @Test
-    void shouldMarkStateAsFinal() {
-        StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
-            .initialState(State.START)
-            .configure(State.START)
-                .permit(Event.PROCESS, State.PROCESSING)
-            .and()
-            .configure(State.PROCESSING)
-                .permit(Event.COMPLETE, State.COMPLETED)
-                .permit(Event.FAIL, State.FAILED)
-            .and()
-            .configure(State.COMPLETED)
-                .asFinal()
-            .and()
-            .configure(State.FAILED)
-                .asFinal()
-            .and()
-            .build();
+  enum Event {PROCESS, COMPLETE, FAIL, RETRY}
 
-        assertTrue(machine.isFinalState(State.COMPLETED));
-        assertTrue(machine.isFinalState(State.FAILED));
-        assertFalse(machine.isFinalState(State.START));
-        assertFalse(machine.isFinalState(State.PROCESSING));
-    }
+  @Test
+  void shouldMarkStateAsFinal() {
+    StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
+        .initialState(State.START)
+        .configure(State.START)
+        .permit(Event.PROCESS, State.PROCESSING)
+        .and()
+        .configure(State.PROCESSING)
+        .permit(Event.COMPLETE, State.COMPLETED)
+        .permit(Event.FAIL, State.FAILED)
+        .and()
+        .configure(State.COMPLETED)
+        .asFinal()
+        .and()
+        .configure(State.FAILED)
+        .asFinal()
+        .and()
+        .build();
 
-    @Test
-    void shouldPreventTransitionsFromFinalState() {
-        StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
-            .initialState(State.START)
-            .configure(State.START)
-                .permit(Event.PROCESS, State.PROCESSING)
-            .and()
-            .configure(State.PROCESSING)
-                .permit(Event.COMPLETE, State.COMPLETED)
-            .and()
-            .configure(State.COMPLETED)
-                .asFinal()
-            .and()
-            .build();
+    assertTrue(machine.isFinalState(State.COMPLETED));
+    assertTrue(machine.isFinalState(State.FAILED));
+    assertFalse(machine.isFinalState(State.START));
+    assertFalse(machine.isFinalState(State.PROCESSING));
+  }
 
-        // Transition to final state should work
-        State state = machine.fire(State.START, Event.PROCESS, "context");
-        assertEquals(State.PROCESSING, state);
+  @Test
+  void shouldPreventTransitionsFromFinalState() {
+    StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
+        .initialState(State.START)
+        .configure(State.START)
+        .permit(Event.PROCESS, State.PROCESSING)
+        .and()
+        .configure(State.PROCESSING)
+        .permit(Event.COMPLETE, State.COMPLETED)
+        .and()
+        .configure(State.COMPLETED)
+        .asFinal()
+        .and()
+        .build();
 
-        state = machine.fire(State.PROCESSING, Event.COMPLETE, "context");
-        assertEquals(State.COMPLETED, state);
+    // Transition to final state should work
+    State state = machine.fire(State.START, Event.PROCESS, "context");
+    assertEquals(State.PROCESSING, state);
 
-        // Cannot fire events from final state
-        assertFalse(machine.canFire(State.COMPLETED, Event.RETRY, "context"));
+    state = machine.fire(State.PROCESSING, Event.COMPLETE, "context");
+    assertEquals(State.COMPLETED, state);
 
-        TransitionResult<State> result = machine.fireWithResult(State.COMPLETED, Event.RETRY, "context");
-        assertFalse(result.wasTransitioned());
-        assertEquals(State.COMPLETED, result.state());
-        assertTrue(result.reason().contains("Cannot transition from final state"));
-    }
+    // Cannot fire events from final state
+    assertFalse(machine.canFire(State.COMPLETED, Event.RETRY, "context"));
 
-    @Test
-    void shouldValidateFinalStatesWithTransitions() {
-        StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
-            .initialState(State.START)
-            .configure(State.START)
-                .permit(Event.PROCESS, State.COMPLETED)
-            .and()
-            .configure(State.COMPLETED)
-                .asFinal()
-                .permit(Event.RETRY, State.START) // This should fail validation
-            .and()
-            .build();
+    TransitionResult<State> result = machine.fireWithResult(State.COMPLETED, Event.RETRY, "context");
+    assertFalse(result.wasTransitioned());
+    assertEquals(State.COMPLETED, result.state());
+    assertTrue(result.reason().contains("Cannot transition from final state"));
+  }
 
-        ValidationResult result = machine.validate();
-        assertFalse(result.isValid());
-        assertTrue(result.errors().stream().anyMatch(error ->
-            error.contains("Final state") && error.contains("should not have any transitions")));
-    }
+  @Test
+  void shouldValidateFinalStatesWithTransitions() {
+    StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
+        .initialState(State.START)
+        .configure(State.START)
+        .permit(Event.PROCESS, State.COMPLETED)
+        .and()
+        .configure(State.COMPLETED)
+        .asFinal()
+        .permit(Event.RETRY, State.START) // This should fail validation
+        .and()
+        .build();
 
-    @Test
-    void shouldAllowEntryAndExitActionsOnFinalStates() {
-        StringBuilder log = new StringBuilder();
+    ValidationResult result = machine.validate();
+    assertFalse(result.isValid());
+    assertTrue(result.errors().stream().anyMatch(error ->
+        error.contains("Final state") && error.contains("should not have any transitions")));
+  }
 
-        StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
-            .initialState(State.START)
-            .configure(State.START)
-                .permit(Event.PROCESS, State.COMPLETED)
-            .and()
-            .configure(State.COMPLETED)
-                .asFinal()
-                .onEntry((transition, context) -> log.append("Entered final state"))
-                .onExit((transition, context) -> log.append("Exited final state"))
-            .and()
-            .build();
+  @Test
+  void shouldAllowEntryAndExitActionsOnFinalStates() {
+    StringBuilder log = new StringBuilder();
 
-        machine.fire(State.START, Event.PROCESS, "context");
+    StateMachine<State, Event, String> machine = FlowMachine.<State, Event, String>builder()
+        .initialState(State.START)
+        .configure(State.START)
+        .permit(Event.PROCESS, State.COMPLETED)
+        .and()
+        .configure(State.COMPLETED)
+        .asFinal()
+        .onEntry((transition, context) -> log.append("Entered final state"))
+        .onExit((transition, context) -> log.append("Exited final state"))
+        .and()
+        .build();
 
-        assertEquals("Entered final state", log.toString());
-    }
+    machine.fire(State.START, Event.PROCESS, "context");
+
+    assertEquals("Entered final state", log.toString());
+  }
 }

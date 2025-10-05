@@ -28,7 +28,8 @@ class PlantUMLDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = PlantUMLDiagramGenerator.generate(machine, "Simple Test Machine");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new PlantUMLDiagramGenerator<>();
+        String diagram = generator.generate(machine, "Simple Test Machine");
 
         // Verify basic structure
         assertTrue(diagram.contains("@startuml"));
@@ -56,7 +57,8 @@ class PlantUMLDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = PlantUMLDiagramGenerator.generate(machine, null);
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new PlantUMLDiagramGenerator<>();
+        String diagram = generator.generate(machine, null);
 
         // Should not contain title
         assertFalse(diagram.contains("title"));
@@ -78,7 +80,8 @@ class PlantUMLDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = PlantUMLDiagramGenerator.generateDetailed(machine, "Test Machine");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new PlantUMLDiagramGenerator<>();
+        String diagram = generator.generateDetailed(machine, "Test Machine");
 
         // Should contain enhanced title with statistics
         assertTrue(diagram.contains("Test Machine\\n(2 states, 1 transitions)"));
@@ -108,7 +111,8 @@ class PlantUMLDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = PlantUMLDiagramGenerator.generateForEvent(machine, SimpleEvent.GO, "GO Event Only");
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new PlantUMLDiagramGenerator<>();
+        String diagram = generator.generateForEvent(machine, SimpleEvent.GO, "GO Event Only");
 
         // Should contain only GO transitions
         assertTrue(diagram.contains("START --> MIDDLE : GO"));
@@ -149,7 +153,8 @@ class PlantUMLDiagramGeneratorTest {
             .and()
             .build();
 
-        String diagram = PlantUMLDiagramGenerator.generate(machine, "Error Handling");
+        DiagramGenerator<ErrorState, ErrorEvent, String> generator = new PlantUMLDiagramGenerator<>();
+        String diagram = generator.generate(machine, "Error Handling");
 
         // Should mark error-related states with special styling (non-final states only)
         assertTrue(diagram.contains("state ERROR_STATE <<Error>>"));
@@ -174,7 +179,7 @@ class PlantUMLDiagramGeneratorTest {
             .and()
             .build();
 
-        DiagramGenerator<SimpleState, SimpleEvent, String> generator = PlantUMLDiagramGenerator.create();
+        DiagramGenerator<SimpleState, SimpleEvent, String> generator = new PlantUMLDiagramGenerator<>();
 
         assertEquals(DiagramFormat.PLANTUML, generator.getFormatName());
 

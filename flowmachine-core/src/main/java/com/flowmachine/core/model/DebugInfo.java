@@ -1,6 +1,7 @@
 package com.flowmachine.core.model;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public record DebugInfo<TState, TEvent>(
     TState currentState,
@@ -29,7 +30,7 @@ public record DebugInfo<TState, TEvent>(
     sb.append("State: ").append(currentState);
     sb.append(", Event: ").append(event);
     sb.append(", Reason: ").append(reason);
-    if (context != null) {
+    if (Objects.nonNull(context)) {
       sb.append(", Context: ").append(context);
     }
     return sb.toString();
